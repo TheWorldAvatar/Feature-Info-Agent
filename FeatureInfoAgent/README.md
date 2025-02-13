@@ -1,6 +1,6 @@
 # Feature Info Agent
 
-<img align="right" width="200" height="200" src="./docs/fia-logo.svg">
+<img align="right" width="200" height="200" src="./docs/fia-logo.svg" alt="Feature Info Agent Logo">
 
 This Feature Info Agent (FIA) acts as a single access point for [TWA Visualisations](https://github.com/cambridge-cares/TheWorldAvatar/wiki/TWA-Visualisations) to query for both meta and time series data of an individual feature (i.e. a single geographical location) so that it can then be displayed within the side panel of the visualisation.
 
@@ -28,7 +28,7 @@ In addition to the above restrictions, the FIA uses a hardcoded SPARQL query to 
 
 If the query fails to return any results, then the FIA will not function; developers may need to update their triples/mapping until at least one of the queries does return something.
 
-```
+```SPARQL
 prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#>
 
@@ -141,13 +141,13 @@ Queries for meta data should not concern themselves with data relating to time s
 
 Queries that generate multiple rows with the same property name are supported, their values will be combined into a single JSON array by the agent.
 
-| Property | Value | Unit |
-| --- | --- | --- |
-| Elevation | 100 | m |
-| Station Reference | 0001 | |
-| Station Reference | 0001A | |
-| Catchment Name | Cotswolds | |
-| Up Time | 7 | Days |
+| Property          | Value     | Unit |
+| ----------------- | --------- | ---- |
+| Elevation         | 100       | m    |
+| Station Reference | 0001      |      |
+| Station Reference | 0001A     |      |
+| Catchment Name    | Cotswolds |      |
+| Up Time           | 7         | Days |
 
 An example of a meta data SPARQL query [can be seen here](./sample/fia/CastleMeta.sparql); note that this is for a sample data set defined in a simple ontology [here](./sample/sample-tboxes.csv).
 
@@ -157,11 +157,11 @@ Queries for measurable entities need to return the IRIs of the entities represen
 
 Required columns are `Measurable` (`Measurement` also supported for backwards compatibility) containing the entity IRI, `Name` containing a user facing name for this entry, and `Unit` containing the unit (which can be blank); any other columns are currently ignored
 
-| Measurement | Name | Unit |
-| --- | --- | --- |
-| <https://theworldavatar.io/measurement-iri-one/> | Flow Rate | m^3/s |
-| <https://theworldavatar.io/measurement-iri-two/> | Speed | m/s |
-| <https://theworldavatar.io/measurement-iri-three/> | Ownership | |
+| Measurement                                        | Name      | Unit  |
+| -------------------------------------------------- | --------- | ----- |
+| <https://theworldavatar.io/measurement-iri-one/>   | Flow Rate | m^3/s |
+| <https://theworldavatar.io/measurement-iri-two/>   | Speed     | m/s   |
+| <https://theworldavatar.io/measurement-iri-three/> | Ownership |       |
 
 An example of a meta data SPARQL query [can be seen here](./sample/fia/CastleTime.sparql); note that this is for a sample data set defined in a simple ontology [here](./sample/sample-tboxes.csv).
 
