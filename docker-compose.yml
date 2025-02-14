@@ -1,9 +1,10 @@
-version: "3.8"
-
-# Services
 services:
 
-  # FeatureInfoAgent
   feature-info-agent:
-    image: ghcr.io/cambridge-cares/feature-info-agent:latest
+    image: ghcr.io/cambridge-cares/feature-info-agent:4.0.0
+    container_name: feature-info-agent
+    restart: on-failure:3
     build: .
+    labels:
+        authors: "support@cmcl.io"
+        description: "TWA Feature Info Agent image."
