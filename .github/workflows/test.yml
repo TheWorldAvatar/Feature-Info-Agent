@@ -18,7 +18,7 @@ jobs:
       packages: read # will be needed later but using the secret for now
 
     steps:
-      - name: Checkout repository
+      - name: Check Out Repository
         uses: actions/checkout@v4
 
       # Set up Maven settings with GitHub token (currently needs one with access to packages on the old org. Will be replaced with the regular token when everything in same org)
@@ -41,7 +41,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      # Run Maven tests
       - name: Run Tests
         working-directory: code
         run: mvn test
