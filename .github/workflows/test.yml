@@ -1,0 +1,44 @@
+name: Test the Feature Info Agent
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - code/**
+      - "!**.md"
+      - "!**/release.html"
+  workflow_dispatch:
+
+jobs:
+  build-image:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Set up Maven settings with GitHub token (currently needs one with access to packages on the old org. Will be replaced with the regular token when everything in same org)
+      - name: Set up Maven settings
+        run: |
+          mkdir -p ~/.m2
+          echo "<settings><servers><server><id>github</id><username>${{ secrets.USHCODE_USERNAME }}</username><password>${{ secrets.USHCODE_PACKAGE_TOKEN }}</password></server></servers></settings>" > ~/.m2/settings.xml
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: "adopt"
+          java-version: "17"
+
+      - name: Cache Maven dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      # Run Maven tests
+      - name: Run Tests
+        working-directory: code
+        run: mvn test
