@@ -9,7 +9,7 @@ WORKDIR /root/.m2
 
 # Note that | rather than / is used as the sed delimiter, since encrypted passwords can contain the latter, but not the former
 RUN sed -i "s|MASTER_PASSWORD|$(mvn --encrypt-master-password master_password)|" settings-security.xml
-RUN sed -i "s|REPO_USERNAME|$(cat ../credentials/repo_username.txt)|;s|REPO_PASSWORD|$(cat ../credentials/repo_password.txt|xargs mvn --encrypt-password)|" settings.xml
+RUN sed -i "s|REPO_USERNAME|$(cat ../maven-credentials/repo_username.txt)|;s|REPO_PASSWORD|$(cat ../maven-credentials/repo_password.txt|xargs mvn --encrypt-password)|" settings.xml
 
 # Build
 WORKDIR /root/code
