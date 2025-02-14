@@ -7,12 +7,15 @@ on:
     paths:
       - code/**
       - "!**.md"
-      - "!**/release.html"
   workflow_dispatch:
 
 jobs:
   build-image:
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: read # will be needed later but using the secret for now
 
     steps:
       - name: Checkout repository
