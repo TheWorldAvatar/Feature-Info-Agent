@@ -137,15 +137,37 @@ public class TrajectoryHandler {
             TimeSeriesClient<Long> tsClient = getTimeSeriesClientViaFactory(List.of(pointIri));
             tsClient.setRDBClient(tsClient.getRdbUrl(), rdbEndpoint.username(), rdbEndpoint.password());
 
-            TimeSeries<Long> timeseries = tsClient.getTimeSeriesWithinBounds(List.of(pointIri), lowerbound, upperbound);
-            timeList.addAll(timeseries.getTimes());
-            pointList.addAll(timeseries.getValuesAsPoint(pointIri));
-        });
+            TimeSeries<Long> latestData = tsClient.getLatestData(pointIri);
 
+            if (!latestData.getTimes().isEmpty()) {
+                // value from viz framework is always in seconds
+                if (isMilliSeconds(latestData.getTimes().get(0))) {
+                    TimeSeries<Long> timeseries = tsClient.getTimeSeriesWithinBounds(List.of(pointIri),
+                            lowerbound * 1000, upperbound * 1000);
+                    timeList.addAll(timeseries.getTimes());
+                    pointList.addAll(timeseries.getValuesAsPoint(pointIri));
+                } else {
+                    TimeSeries<Long> timeseries = tsClient.getTimeSeriesWithinBounds(List.of(pointIri), lowerbound,
+                            upperbound);
+                    timeList.addAll(timeseries.getTimes());
+                    pointList.addAll(timeseries.getValuesAsPoint(pointIri));
+                }
+            }
+        });
         // sort points according to time
         sortTwoLists(timeList, pointList);
 
         return new LineString(pointList.toArray(new Point[pointList.size()]));
+    }
+
+    // assume that data is always historical...
+    private boolean isMilliSeconds(long epoch) {
+        // Get the current time in milliseconds
+        long currentTimeMillis = System.currentTimeMillis();
+
+        // If the epoch value is greater than current time in milliseconds,
+        // it's likely too large to be in milliseconds and might be in seconds.
+        return epoch > currentTimeMillis / 1000; // compare with seconds since epoch
     }
 
     private List<String> getFeatures(String queryString, String trajectoryDatabase) {
