@@ -294,7 +294,7 @@ public class ConfigEntry {
                 String classIRI,
                 String metaQueryFile) throws IllegalArgumentException, IOException {
 
-            return build(id, classIRI, metaQueryFile, null, null, 0, null, null);
+            return build(id, classIRI, metaQueryFile, null, null, 0, null, null, null, null, null, null);
         }
 
         /**
@@ -322,7 +322,8 @@ public class ConfigEntry {
                 String timeLimitUnit,
                 String timeDatabase) throws IllegalArgumentException, IOException {
 
-            return build(id, classIRI, null, timeQueryFile, timeReference, timeLimitValue, timeLimitUnit, timeDatabase);
+            return build(id, classIRI, null, timeQueryFile, timeReference, timeLimitValue, timeLimitUnit, timeDatabase,
+                    null, null, null, null);
         }
 
         /**
@@ -350,7 +351,11 @@ public class ConfigEntry {
                 String timeReference,
                 int timeLimitValue,
                 String timeLimitUnit,
-                String timeDatabase) throws IllegalArgumentException, IOException {
+                String timeDatabase,
+                String pointIriQuery,
+                String featureIriQuery,
+                String metaQuery,
+                String trajectoryDatabase) throws IllegalArgumentException, IOException {
 
             // Check for valid parameters
             if (timeQueryFile != null && !timeQueryFile.isEmpty() && (timeDatabase == null || timeDatabase.isEmpty())) {
@@ -397,37 +402,11 @@ public class ConfigEntry {
 
             entry.timeDatabase = timeDatabase;
 
-            // Populate query contents
-            readQueryContent(entry);
-            return entry;
-        }
-
-        /**
-         * special case for trajectory query
-         * 
-         * @param id
-         * @param classIRI
-         * @param trajectoryQuery
-         * @param featureIriQuery
-         * @param metaQuery
-         * @return
-         * @throws IOException
-         */
-        public ConfigEntry build(
-                String id,
-                String classIRI,
-                String pointIriQuery,
-                String featureIriQuery,
-                String metaQuery,
-                String database) throws IOException {
-
-            // Create and return ConfigEntry instance.
-            ConfigEntry entry = new ConfigEntry(id);
-            entry.classIRI = classIRI;
+            // trajectory stuff
             entry.pointIriQueryFile = pointIriQuery;
             entry.featureIriQueryFile = featureIriQuery;
             entry.trajectoryMetaFile = metaQuery;
-            entry.trajectoryDatabase = database;
+            entry.trajectoryDatabase = trajectoryDatabase;
 
             // Populate query contents
             readQueryContent(entry);

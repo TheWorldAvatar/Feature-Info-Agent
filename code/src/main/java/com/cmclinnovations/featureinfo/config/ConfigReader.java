@@ -139,22 +139,25 @@ public class ConfigReader {
                 timeDatabase = timeEntry.optString("database");
             }
 
+            // Trajectory
+            JSONObject trajectoryEntry = jsonEntry.optJSONObject("trajectory");
+
+            String pointIriQuery = null;
+            String featureIriQuery = null;
+            String metaQuery = null;
+            String trajectoryDatabase = null;
+            if (trajectoryEntry != null) {
+                LOGGER.info("Detected trajectory config for {}", clazz);
+                // trajectory details
+                pointIriQuery = trajectoryEntry.getString("pointIriQuery");
+                featureIriQuery = trajectoryEntry.getString("featureIriQuery");
+                metaQuery = trajectoryEntry.getString("metaQuery");
+                trajectoryDatabase = trajectoryEntry.getString("database");
+            }
+
             // Build
-            return builder.build(id, clazz, metaFile, timeFile, timeReference, timeLimit, timeUnit, timeDatabase);
-        } else if (jsonEntry.has("trajectory")) { // special trajectory case
-            // TODO: in futrue, it would be best to do tragectory calculations all in a
-            // single sparql query. This requires the time series being kg accessible.
-            String id = jsonEntry.getString("id");
-            String clazz = jsonEntry.getString("class");
-
-            // trajectory details
-            JSONObject trajectoryEntry = jsonEntry.getJSONObject("trajectory");
-            String pointIriQuery = trajectoryEntry.getString("pointIriQuery");
-            String featureIriQuery = trajectoryEntry.getString("featureIriQuery");
-            String metaQuery = trajectoryEntry.getString("metaQuery");
-            String timeDatabase = trajectoryEntry.optString("database");
-
-            return builder.build(id, clazz, pointIriQuery, featureIriQuery, metaQuery, timeDatabase);
+            return builder.build(id, clazz, metaFile, timeFile, timeReference, timeLimit, timeUnit, timeDatabase,
+                    pointIriQuery, featureIriQuery, metaQuery, trajectoryDatabase);
         } else {
             // Assume old format entry
             String id = "entry-" + (entries.size() + 1);
@@ -171,7 +174,8 @@ public class ConfigReader {
             String timeDatabase = jsonEntry.optString("databaseName");
 
             // Build
-            return builder.build(id, clazz, metaFile, timeFile, timeReference, timeLimit, timeUnit, timeDatabase);
+            return builder.build(id, clazz, metaFile, timeFile, timeReference, timeLimit, timeUnit, timeDatabase, null,
+                    null, null, null);
         }
 
     }
