@@ -111,7 +111,7 @@ public class ConfigReader {
         // Initialise a new builder
         ConfigEntryBuilder builder = new ConfigEntryBuilder(configDir);
 
-        if (jsonEntry.has("meta") || jsonEntry.has("time")) {
+        if (jsonEntry.has("meta") || jsonEntry.has("time") || jsonEntry.has("trajectory")) {
             // New format entry
             String id = jsonEntry.getString("id");
             String clazz = jsonEntry.getString("class");
@@ -140,24 +140,17 @@ public class ConfigReader {
             }
 
             // Trajectory
-            JSONObject trajectoryEntry = jsonEntry.optJSONObject("trajectory");
-
-            String pointIriQuery = null;
-            String featureIriQuery = null;
-            String metaQuery = null;
-            String trajectoryDatabase = null;
-            if (trajectoryEntry != null) {
+            JSONArray trajectoryConfig;
+            if (jsonEntry.has("trajectory")) {
                 LOGGER.info("Detected trajectory config for {}", clazz);
-                // trajectory details
-                pointIriQuery = trajectoryEntry.getString("pointIriQuery");
-                featureIriQuery = trajectoryEntry.getString("featureIriQuery");
-                metaQuery = trajectoryEntry.getString("metaQuery");
-                trajectoryDatabase = trajectoryEntry.getString("database");
+                trajectoryConfig = jsonEntry.getJSONArray("trajectory");
+            } else {
+                trajectoryConfig = new JSONArray();
             }
 
             // Build
             return builder.build(id, clazz, metaFile, timeFile, timeReference, timeLimit, timeUnit, timeDatabase,
-                    pointIriQuery, featureIriQuery, metaQuery, trajectoryDatabase);
+                    trajectoryConfig);
         } else {
             // Assume old format entry
             String id = "entry-" + (entries.size() + 1);
@@ -174,8 +167,8 @@ public class ConfigReader {
             String timeDatabase = jsonEntry.optString("databaseName");
 
             // Build
-            return builder.build(id, clazz, metaFile, timeFile, timeReference, timeLimit, timeUnit, timeDatabase, null,
-                    null, null, null);
+            return builder.build(id, clazz, metaFile, timeFile, timeReference, timeLimit, timeUnit, timeDatabase,
+                    new JSONArray());
         }
 
     }

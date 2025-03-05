@@ -5,10 +5,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.json.JSONArray;
 
 import com.google.common.base.Objects;
 
@@ -74,13 +77,7 @@ public class ConfigEntry {
      */
     private String timeDatabase;
 
-    private String pointIriQueryFile;
-    private String pointIriQueryContent;
-    private String featureIriQueryFile;
-    private String featureIriQueryContent;
-    private String trajectoryMetaFile;
-    private String trajectoryMetaContent;
-    private String trajectoryDatabase;
+    private List<TrajectoryConfigEntry> trajectoryConfigEntryList;
 
     /**
      * Initialise a new ConfigEntry instance.
@@ -172,20 +169,8 @@ public class ConfigEntry {
         return this.timeDatabase;
     }
 
-    public String getPointIriQuery() {
-        return pointIriQueryContent;
-    }
-
-    public String getFeatureIriQuery() {
-        return featureIriQueryContent;
-    }
-
-    public String getTrajectoryMetaQuery() {
-        return trajectoryMetaContent;
-    }
-
-    public String getTrajectoryDatabase() {
-        return trajectoryDatabase;
+    public List<TrajectoryConfigEntry> getTrajectoryConfigEntries() {
+        return trajectoryConfigEntryList;
     }
 
     /**
@@ -204,10 +189,6 @@ public class ConfigEntry {
         hash = prime * hash + (this.timeLimitValue);
         hash = prime * hash + (this.timeLimitUnit != null ? this.timeLimitUnit.hashCode() : 0);
         hash = prime * hash + (this.timeDatabase != null ? this.timeDatabase.hashCode() : 0);
-        hash = prime * hash + (this.pointIriQueryFile != null ? this.pointIriQueryFile.hashCode() : 0);
-        hash = prime * hash + (this.featureIriQueryFile != null ? this.featureIriQueryFile.hashCode() : 0);
-        hash = prime * hash + (this.trajectoryMetaFile != null ? this.trajectoryMetaFile.hashCode() : 0);
-        hash = prime * hash + (this.trajectoryDatabase != null ? this.trajectoryDatabase.hashCode() : 0);
         return hash;
     }
 
@@ -240,14 +221,6 @@ public class ConfigEntry {
         if (!Objects.equal(this.timeLimitUnit, that.timeLimitUnit))
             return false;
         if (!Objects.equal(this.timeDatabase, that.timeDatabase))
-            return false;
-        if (!Objects.equal(this.pointIriQueryFile, that.pointIriQueryFile))
-            return false;
-        if (!Objects.equal(this.featureIriQueryFile, that.featureIriQueryFile))
-            return false;
-        if (!Objects.equal(this.trajectoryMetaFile, that.trajectoryMetaFile))
-            return false;
-        if (!Objects.equal(this.trajectoryDatabase, that.trajectoryDatabase))
             return false;
 
         return true;
@@ -294,7 +267,7 @@ public class ConfigEntry {
                 String classIRI,
                 String metaQueryFile) throws IllegalArgumentException, IOException {
 
-            return build(id, classIRI, metaQueryFile, null, null, 0, null, null, null, null, null, null);
+            return build(id, classIRI, metaQueryFile, null, null, 0, null, null, new JSONArray());
         }
 
         /**
@@ -323,7 +296,7 @@ public class ConfigEntry {
                 String timeDatabase) throws IllegalArgumentException, IOException {
 
             return build(id, classIRI, null, timeQueryFile, timeReference, timeLimitValue, timeLimitUnit, timeDatabase,
-                    null, null, null, null);
+                    new JSONArray());
         }
 
         /**
@@ -352,10 +325,7 @@ public class ConfigEntry {
                 int timeLimitValue,
                 String timeLimitUnit,
                 String timeDatabase,
-                String pointIriQuery,
-                String featureIriQuery,
-                String metaQuery,
-                String trajectoryDatabase) throws IllegalArgumentException, IOException {
+                JSONArray trajectoryConfig) throws IllegalArgumentException, IOException {
 
             // Check for valid parameters
             if (timeQueryFile != null && !timeQueryFile.isEmpty() && (timeDatabase == null || timeDatabase.isEmpty())) {
@@ -403,10 +373,17 @@ public class ConfigEntry {
             entry.timeDatabase = timeDatabase;
 
             // trajectory stuff
-            entry.pointIriQueryFile = pointIriQuery;
-            entry.featureIriQueryFile = featureIriQuery;
-            entry.trajectoryMetaFile = metaQuery;
-            entry.trajectoryDatabase = trajectoryDatabase;
+            entry.trajectoryConfigEntryList = new ArrayList<>();
+            for (int i = 0; i < trajectoryConfig.length(); i++) {
+                TrajectoryConfigEntry trajectoryConfigEntry = new TrajectoryConfigEntry();
+                trajectoryConfigEntry.pointIriQueryFile = trajectoryConfig.getJSONObject(i).getString("pointIriQuery");
+                trajectoryConfigEntry.featureIriQueryFile = trajectoryConfig.getJSONObject(i)
+                        .getString("featureIriQuery");
+                trajectoryConfigEntry.trajectoryMetaFile = trajectoryConfig.getJSONObject(i).getString("metaQuery");
+                trajectoryConfigEntry.trajectoryDatabase = trajectoryConfig.getJSONObject(i).getString("database");
+
+                entry.trajectoryConfigEntryList.add(trajectoryConfigEntry);
+            }
 
             // Populate query contents
             readQueryContent(entry);
@@ -441,18 +418,49 @@ public class ConfigEntry {
             }
 
             // Parse trajectory query
-            if (entry.pointIriQueryFile != null && !entry.pointIriQueryFile.isEmpty()) {
-                Path file = this.configDirectory.resolve(Paths.get(entry.pointIriQueryFile));
-                entry.pointIriQueryContent = Files.readString(file);
+            for (TrajectoryConfigEntry trajectoryConfigEntry : entry.trajectoryConfigEntryList) {
+                if (trajectoryConfigEntry.pointIriQueryFile != null
+                        && !trajectoryConfigEntry.pointIriQueryFile.isEmpty()) {
+                    Path file = this.configDirectory.resolve(Paths.get(trajectoryConfigEntry.pointIriQueryFile));
+                    trajectoryConfigEntry.pointIriQueryContent = Files.readString(file);
+                }
+                if (trajectoryConfigEntry.featureIriQueryFile != null
+                        && !trajectoryConfigEntry.featureIriQueryFile.isEmpty()) {
+                    Path file = this.configDirectory.resolve(Paths.get(trajectoryConfigEntry.featureIriQueryFile));
+                    trajectoryConfigEntry.featureIriQueryContent = Files.readString(file);
+                }
+                if (trajectoryConfigEntry.trajectoryMetaFile != null
+                        && !trajectoryConfigEntry.trajectoryMetaFile.isEmpty()) {
+                    Path file = this.configDirectory.resolve(Paths.get(trajectoryConfigEntry.trajectoryMetaFile));
+                    trajectoryConfigEntry.trajectoryMetaContent = Files.readString(file);
+                }
             }
-            if (entry.featureIriQueryFile != null && !entry.featureIriQueryFile.isEmpty()) {
-                Path file = this.configDirectory.resolve(Paths.get(entry.featureIriQueryFile));
-                entry.featureIriQueryContent = Files.readString(file);
-            }
-            if (entry.trajectoryMetaFile != null && !entry.trajectoryMetaFile.isEmpty()) {
-                Path file = this.configDirectory.resolve(Paths.get(entry.trajectoryMetaFile));
-                entry.trajectoryMetaContent = Files.readString(file);
-            }
+        }
+    }
+
+    public static class TrajectoryConfigEntry {
+        private String pointIriQueryFile;
+        private String pointIriQueryContent;
+        private String featureIriQueryFile;
+        private String featureIriQueryContent;
+        private String trajectoryMetaFile;
+        private String trajectoryMetaContent;
+        private String trajectoryDatabase;
+
+        public String getPointIriQuery() {
+            return pointIriQueryContent;
+        }
+
+        public String getFeatureIriQuery() {
+            return featureIriQueryContent;
+        }
+
+        public String getTrajectoryMetaQuery() {
+            return trajectoryMetaContent;
+        }
+
+        public String getTrajectoryDatabase() {
+            return trajectoryDatabase;
         }
     }
 
