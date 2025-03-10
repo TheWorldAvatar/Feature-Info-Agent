@@ -228,7 +228,7 @@ For troubleshooting and FAQs, please see the [FIA Troubleshooting](./docs/troubl
 
 The FIA is a simple HTTP agent written using the existing TWA agent framework. The core functionality of the agent is split across 4 classes; the central `FeatureInfoAgent` class that acts as the receiver and transmitter for HTTP requests, and classes that actually run logic (which should be self-explanatory): `ClassHandler`, `MetaHandler`, and `TimeHandler`.
 
-The algorithm used to find, format, and return data after a request is received is detailed in the Mermaid diagram [here](./docs/mermaid-get-request.md) (although you can also read the in-code documentation for more details).
+The algorithm used to find, format, and return data after a request is received is detailed in the flowchart diagram [here](./docs/mermaid-get-request.md) (although you can also read the in-code documentation for more details).
 
 Building the Docker image for the FIA is automatically triggered under certain conditions (see above), but developers can also build a local copy using the provided `build.sh` script after supplying the required `repo_username.txt` and `repo_password.txt` files within the `credentials` directory.
 
