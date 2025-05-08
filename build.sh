@@ -6,8 +6,8 @@
 # Note that will build a local copy of a single image with the below tags, where
 # VERSION is whatever is currently written in the project's pom.xml file.
 #
-#   - ghcr.io/cambridge-cares/feature-info-agent:latest
-#   - ghcr.io/cambridge-cares/feature-info-agent:VERSION
+#   - ghcr.io/theworldavatar/feature-info-agent:latest
+#   - ghcr.io/theworldavatar/feature-info-agent:VERSION
 # 
 # These should not be pushed to the GitHub image repository unless absolutely
 # necessary. Automated actions will handle the release once a PR to main is merged.
@@ -33,7 +33,7 @@ then
     docker compose -f docker-compose.yml build
 
     # Add version specific tag
-    docker tag "ghcr.io/cambridge-cares/feature-info-agent:latest" "ghcr.io/cambridge-cares/feature-info-agent:$VERSION"
+    docker tag "ghcr.io/theworldavatar/feature-info-agent:latest" "ghcr.io/theworldavatar/feature-info-agent:$VERSION"
 else
     echo "Please run install the 'xmllint' package and try again."
     exit 1

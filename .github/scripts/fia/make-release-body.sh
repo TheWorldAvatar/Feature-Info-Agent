@@ -5,7 +5,7 @@
 #
 # Author: Michael Hillman (mdhillman<@>cmcl.io)
 
-CHANGELOG="./Agents/FeatureInfoAgent/CHANGELOG.md"
+CHANGELOG="./CHANGELOG.md"
 regexp="^#\s.*"
 SECTION=0
 

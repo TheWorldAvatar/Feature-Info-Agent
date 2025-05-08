@@ -5,5 +5,5 @@ services:
 
   # FeatureInfoAgent
   feature-info-agent:
-    image: ghcr.io/cambridge-cares/feature-info-agent:latest
+    image: ghcr.io/theworldavatar/feature-info-agent:latest
     build: .

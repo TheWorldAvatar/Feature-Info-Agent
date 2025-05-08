@@ -21,10 +21,6 @@ on:
   push:
     branches:
       - main
-    paths:
-      - Agents/FeatureInfoAgent/**
-      - '!**.md'
-      - '!**/release.html'
 
 
 # Job definitions
@@ -44,7 +40,7 @@ jobs:
         
       # Write Maven credentials
       - name: Set up Maven credentials
-        working-directory: ./Agents/FeatureInfoAgent/credentials
+        working-directory: ./credentials
         run: echo "$USERNAME" > repo_username.txt && echo  "$PASSWORD" > repo_password.txt
         env:
           USERNAME: ${{github.actor}}
@@ -61,12 +57,12 @@ jobs:
         id: extractor
         uses: mikefarah/yq@master
         with:
-          cmd: yq '.services.feature-info-agent.image' './Agents/FeatureInfoAgent/docker-compose.yml'
+          cmd: yq '.services.feature-info-agent.image' './docker-compose.yml'
         
         
       # Get and parse the version from the POM
       - name: Parse the version number
-        working-directory: ./Agents/FeatureInfoAgent
+        working-directory: .
         run: |
           sudo apt install -y libxml2-utils
           VERSION=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='version']/text()" ./code/pom.xml)
@@ -89,12 +85,12 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           push: true
-          context: ./Agents/FeatureInfoAgent
+          context: .
           tags: |
-            ghcr.io/cambridge-cares/feature-info-agent:latest
-            ghcr.io/cambridge-cares/feature-info-agent:${{ env.versionFull }}
-            ghcr.io/cambridge-cares/feature-info-agent:${{ env.versionMajor }}
-            ghcr.io/cambridge-cares/feature-info-agent:${{ env.versionMinor }}
+            ghcr.io/theworldavatar/feature-info-agent:latest
+            ghcr.io/theworldavatar/feature-info-agent:${{ env.versionFull }}
+            ghcr.io/theworldavatar/feature-info-agent:${{ env.versionMajor }}
+            ghcr.io/theworldavatar/feature-info-agent:${{ env.versionMinor }}
             
             
       # Generate the release body text

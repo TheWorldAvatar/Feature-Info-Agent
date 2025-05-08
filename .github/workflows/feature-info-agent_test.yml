@@ -16,10 +16,6 @@ on:
   pull_request:
     branches:
       - main
-    paths:
-      - Agents/FeatureInfoAgent/**
-      - '!**.md'
-      - '!**/release.html'
 
 
 # Job definitions
@@ -39,7 +35,7 @@ jobs:
         
       # Write Maven credentials
       - name: Set up Maven credentials
-        working-directory: ./Agents/FeatureInfoAgent/credentials
+        working-directory: ./credentials
         run: echo "$USERNAME" > repo_username.txt && echo  "$PASSWORD" > repo_password.txt
         env:
           USERNAME: ${{github.actor}}
@@ -56,5 +52,5 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           push: false
-          context: ./Agents/FeatureInfoAgent
+          context: .
       
