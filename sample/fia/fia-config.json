@@ -3,7 +3,7 @@
         {
             "id": "Castle",
             "class": "https://theworldavatar.io/ontology/ontocastle/ontocastle.owl#Castle",
-            "meta" : {
+            "meta": {
                 "queryFile": "CastleMeta.sparql"
             },
             "time": {
@@ -17,16 +17,34 @@
         {
             "id": "Structure",
             "class": "https://theworldavatar.io/ontology/ontocastle/ontocastle.owl#Structure",
-            "meta" : {
+            "meta": {
                 "queryFile": "StructureMeta.sparql"
             }
         },
         {
             "id": "Feature",
             "class": "http://www.opengis.net/ont/geosparql#Feature",
-            "meta" : {
+            "meta": {
                 "queryFile": "FeatureMeta.sparql"
             }
+        },
+        {
+            "id": "Line",
+            "class": "https://www.theworldavatar.io/kg/trajectory/Trajectory",
+            "trajectory": [
+                {
+                    "pointIriQuery": "point_query.sparql",
+                    "featureIriQuery": "feature_query.sparql",
+                    "metaQuery": "trajectory_meta.sparql",
+                    "database": "postgres"
+                },
+                {
+                    "pointIriQuery": "point_query.sparql",
+                    "featureIriQuery": "feature_query.sql",
+                    "metaQuery": "trajectory_meta.sparql",
+                    "database": "postgres"
+                }
+            ]
         }
     ]
 }
