@@ -1,0 +1,6 @@
+prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+SELECT (STR(?ontop_endpoint) AS ?ontop_url) WHERE {
+  ?ontop_service rdf:type <https://theworldavatar.io/kg/service#Ontop> ;
+                 <http://www.w3.org/ns/dcat#endpointURL> ?ontop_endpoint .
+}
