@@ -36,6 +36,11 @@ public final class ConfigStore {
     private final List<StackEndpoint> stackEndpoints = new ArrayList<>();
 
     /**
+     * Cached StackInteractor instance.
+     */
+    private StackInteractor stackInteractor;
+
+    /**
      * Cached location of configuration file.
      */
     private final Path configurationFile;
@@ -111,6 +116,9 @@ public final class ConfigStore {
      * @return stack endpoints.
      */
     public List<StackEndpoint> getStackEndpoints() {
+        if(this.stackEndpoints.isEmpty()) {
+            LOGGER.warn("Stack endpoints list is empty - has discoverEndpoints() been called?");
+        }
         return this.stackEndpoints;
     }
 
@@ -122,6 +130,9 @@ public final class ConfigStore {
      * @return endpoints of the input type.
      */
     public List<StackEndpoint> getStackEndpoints(StackEndpointType type) {
+        if(this.stackEndpoints.isEmpty()) {
+            LOGGER.warn("Stack endpoints list is empty - has discoverEndpoints() been called?");
+        }
         return this.stackEndpoints.stream()
              .filter(endpoint -> endpoint.type().equals(type))
              .collect(Collectors.toList());
@@ -151,9 +162,8 @@ public final class ConfigStore {
         // Get stack endpoints
         if(inStack) {
             this.stackEndpoints.clear();
-            StackInteractor interactor = new StackInteractor(this.stackEndpoints);
-            interactor.discoverEndpoints();
-            LOGGER.info("Have discovered a total of {} stack endpoints.", this.stackEndpoints.size());
+            this.stackInteractor = new StackInteractor(this.stackEndpoints);
+            // Note: discoverEndpoints() will be called later after kgClient is initialized
         }
     }
 
@@ -167,6 +177,15 @@ public final class ConfigStore {
             throw new IllegalStateException("Cannot find the required '" + VARIABLE + "' environment variable!");
         }
         return location;
+    }
+
+    /**
+     * Returns the cached StackInteractor instance.
+     * 
+     * @return StackInteractor instance (or null if not initialized).
+     */
+    public StackInteractor getStackInteractor() {
+        return this.stackInteractor;
     }
     
 

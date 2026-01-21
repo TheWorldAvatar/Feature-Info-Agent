@@ -51,19 +51,14 @@ public class FeatureInfoAgent extends JPSAgent {
     private static final Logger LOGGER = LogManager.getLogger(FeatureInfoAgent.class);
     
     /**
-     * Reads and stores configuration details.
+     * Manager class to run information gathering logic.
      */
-    private final ConfigStore configStore = new ConfigStore();
+    private QueryManager queryManager;
 
     /**
      * Is the FeatureInfoAgent in a valid state.
      */
     private boolean valid = true;
-
-    /**
-     * Manager class to run information gathering logic.
-     */
-    private QueryManager queryManager;
 
     /**
      * Object mapper used for Jackson serialisation and deserialiation.
@@ -79,7 +74,9 @@ public class FeatureInfoAgent extends JPSAgent {
     public synchronized void init() throws ServletException {
         try {
             super.init();
-            configStore.loadDetails();
+            // Initialize QueryManager first (which contains ConfigStore)
+            this.queryManager = new QueryManager();
+            this.queryManager.loadConfiguration();
             FeatureInfoAgent.CONTEXT = this.getServletContext();
         } catch(Exception exception) {
             this.valid = false;
@@ -94,11 +91,34 @@ public class FeatureInfoAgent extends JPSAgent {
      */
     public QueryManager getQueryManager() {
         if(this.queryManager == null) {
-            this.queryManager = new QueryManager(this.configStore);
-
+            // Initialize QueryManager if not already done
+            try {
+                this.queryManager = new QueryManager();
+                this.queryManager.loadConfiguration();
+            } catch(Exception exception) {
+                this.valid = false;
+                LOGGER.error("Could not initialise QueryManager!", exception);
+                return null;
+            }
+        }
+        
+        // Ensure clients are initialized
+        if(!this.queryManager.areClientsInitialized()) {
             RemoteStoreClient kgClient = new RemoteStoreClient();
             TimeSeriesClient<Instant> tsClient = new TimeSeriesClient<>(kgClient, Instant.class);
             this.queryManager.setClients(kgClient, tsClient);
+
+            // Initialize StackInteractor with kgClient and discover endpoints
+            if(this.queryManager.getConfigStore().getStackInteractor() != null) {
+                this.queryManager.getConfigStore().getStackInteractor().setKgClient(kgClient);
+                try {
+                    this.queryManager.getConfigStore().getStackInteractor().discoverEndpoints();
+                    LOGGER.info("Have discovered a total of {} stack endpoints.", 
+                            this.queryManager.getConfigStore().getStackInteractor().getEndpoints().size());
+                } catch(Exception exception) {
+                    LOGGER.error("Could not discover stack endpoints!", exception);
+                }
+            }
         }
         return this.queryManager;
     }
@@ -257,7 +277,7 @@ public class FeatureInfoAgent extends JPSAgent {
         } 
 
         // Force refresh of configuration
-        this.configStore.loadDetails();
+        this.getQueryManager().getConfigStore().loadDetails();
 
         // Respond
         response.setStatus(Response.Status.OK.getStatusCode());
@@ -299,7 +319,7 @@ public class FeatureInfoAgent extends JPSAgent {
         } 
 
         // Make time series data
-        TimeSeriesCreator creator = new TimeSeriesCreator(this.configStore);
+        TimeSeriesCreator creator = new TimeSeriesCreator(this.getQueryManager().getConfigStore());
         creator.createClients("sample-data", "postgres");
         creator.addSampleData();
 

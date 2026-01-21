@@ -1,11 +1,13 @@
 package com.cmclinnovations.featureinfo.config;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.jena.util.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONArray;
@@ -15,6 +17,7 @@ import com.cmclinnovations.stack.clients.blazegraph.BlazegraphEndpointConfig;
 import com.cmclinnovations.stack.clients.docker.ContainerClient;
 import com.cmclinnovations.stack.clients.ontop.OntopEndpointConfig;
 import com.cmclinnovations.stack.clients.postgis.PostGISEndpointConfig;
+import com.cmclinnovations.featureinfo.FeatureInfoAgent;
 import uk.ac.cam.cares.jps.base.query.RemoteStoreClient;
 
 /**
@@ -38,6 +41,11 @@ public class StackInteractor extends ContainerClient {
      * later.
      */
     private static StackEndpoint KB_BLAZEGRAPH_ENDPOINT;
+
+    /**
+     * Cached Ontop query template.
+     */
+    private static String ONTOP_QUERY;
 
     /**
      * Pool of parsed endpoint entries.
@@ -87,16 +95,24 @@ public class StackInteractor extends ContainerClient {
     private List<StackEndpoint> discoverOntop() {
         List<StackEndpoint> ontopEndpoints = new ArrayList<>();
 
+        ontopEndpoints.addAll(discoverOntopDefault());
+
         // If kb blazegraph endpoint is available and kgClient is set, query it for
         // Ontop endpoints
         if (KB_BLAZEGRAPH_ENDPOINT != null && kgClient != null) {
             try {
-                // Read the SPARQL query from file
-                String queryString = readSparqlQuery("/app/queries/ontop-query.sparql");
+                // Load the SPARQL query
+                loadOntopQuery();
+
+                if (ONTOP_QUERY == null) {
+                    LOGGER.warn("Ontop query could not be loaded, falling back to default discovery");
+                    
+                    return ontopEndpoints;
+                }
 
                 // Execute the query using RemoteStoreClient
                 kgClient.setQueryEndpoint(KB_BLAZEGRAPH_ENDPOINT.url());
-                JSONArray queryResult = kgClient.executeQuery(queryString);
+                JSONArray queryResult = kgClient.executeQuery(ONTOP_QUERY);
 
                 // Extract ontop endpoints from the query result
                 for (int i = 0; i < queryResult.length(); i++) {
@@ -115,12 +131,7 @@ public class StackInteractor extends ContainerClient {
             } catch (Exception exception) {
                 LOGGER.warn("Could not query Blazegraph for Ontop endpoints, falling back to default discovery",
                         exception);
-                // Fall back to default Ontop config discovery
-                ontopEndpoints.addAll(discoverOntopDefault());
             }
-        } else {
-            // KB Blazegraph endpoint or kgClient not available, use default discovery
-            ontopEndpoints.addAll(discoverOntopDefault());
         }
 
         return ontopEndpoints;
@@ -146,14 +157,27 @@ public class StackInteractor extends ContainerClient {
     }
 
     /**
-     * Reads a SPARQL query from a file.
-     * 
-     * @param filePath Path to the SPARQL file.
-     * @return The SPARQL query as a string.
-     * @throws IOException If the file cannot be read.
+     * Read and cache the Ontop query.
      */
-    private String readSparqlQuery(String filePath) throws IOException {
-        return new String(Files.readAllBytes(Paths.get(filePath)));
+    private void loadOntopQuery() {
+        if (ONTOP_QUERY == null) {
+            if (FeatureInfoAgent.CONTEXT != null) {
+                // Running as a servlet
+                try (InputStream inStream = FeatureInfoAgent.CONTEXT
+                        .getResourceAsStream("WEB-INF/ontop-query.sparql")) {
+                    ONTOP_QUERY = FileUtils.readWholeFileAsUTF8(inStream);
+                } catch (Exception exception) {
+                    LOGGER.error("Could not read the Ontop query from its file!", exception);
+                }
+            } else {
+                // Running as application/as tests
+                try {
+                    ONTOP_QUERY = Files.readString(Paths.get("WEB-INF/ontop-query.sparql"));
+                } catch (IOException ioException) {
+                    LOGGER.error("Could not read the Ontop query from its file!", ioException);
+                }
+            }
+        }
     }
 
     /**
@@ -246,6 +270,15 @@ public class StackInteractor extends ContainerClient {
             return entry.get(key.toUpperCase());
 
         return null;
+    }
+
+    /**
+     * Returns the list of discovered endpoints.
+     * 
+     * @return List of StackEndpoint instances.
+     */
+    public List<StackEndpoint> getEndpoints() {
+        return this.endpoints;
     }
 
 }

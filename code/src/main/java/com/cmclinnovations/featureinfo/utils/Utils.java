@@ -50,12 +50,16 @@ public final class Utils {
 
 		// Build SPARQL values strings
 		StringBuilder bothBuilder = new StringBuilder();
+		StringBuilder ontopBuilder = new StringBuilder();
 		StringBuilder blazegraphBuilder = new StringBuilder();
 
 		ontops.forEach(endpoint -> {
 			bothBuilder.append("<");
 			bothBuilder.append(endpoint.url());
 			bothBuilder.append("> ");
+			ontopBuilder.append("<");
+			ontopBuilder.append(endpoint.url());
+			ontopBuilder.append("> ");
 		});
 		blazegraphs.forEach(endpoint -> {
 			bothBuilder.append("<");
@@ -69,10 +73,14 @@ public final class Utils {
 		updatedQuery = updatedQuery.replaceAll(Pattern.quote("[ENDPOINTS-ALL]"), bothBuilder.toString());
 		updatedQuery = updatedQuery.replaceAll(Pattern.quote("[ENDPOINTS-BLAZEGRAPH]"), blazegraphBuilder.toString());
 
-		// If a single Ontop endpoint is present, inject that
+		// Handle ONTOP placeholders based on number of endpoints
 		if(ontops.size() == 1) {
+			// Single ONTOP endpoint: replace [ONTOP]
 			String ontopURL = "<" + ontops.get(0).url() + ">";
 			updatedQuery = updatedQuery.replaceAll(Pattern.quote("[ONTOP]"), ontopURL);
+		} else if(ontops.size() > 1) {
+			// Multiple ONTOP endpoints: replace [ENDPOINTS-ONTOP]
+			updatedQuery = updatedQuery.replaceAll(Pattern.quote("[ENDPOINTS-ONTOP]"), ontopBuilder.toString().trim());
 		}
 
 		return updatedQuery;

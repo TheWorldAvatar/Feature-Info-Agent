@@ -51,12 +51,46 @@ public class QueryManager {
     private TimeSeriesClient<Instant> tsClient;
 
     /**
-     * Initialise a new QueryManager instance.
+     * Initialise a new QueryManager instance with internal ConfigStore.
+     */
+    public QueryManager() {
+        this.configStore = new ConfigStore();
+    }
+
+    /**
+     * Initialise a new QueryManager instance with provided ConfigStore (for testing).
      * 
      * @param configStore Store of class mappings and stack endpoints.
      */
     public QueryManager(ConfigStore configStore) {
         this.configStore = configStore;
+    }
+
+    /**
+     * Load configuration details.
+     * 
+     * @throws Exception if configuration loading fails.
+     */
+    public void loadConfiguration() throws Exception {
+        this.configStore.loadDetails();
+    }
+
+    /**
+     * Returns the ConfigStore instance.
+     * 
+     * @return ConfigStore instance.
+     */
+    public ConfigStore getConfigStore() {
+        return this.configStore;
+    }
+
+    /**
+     * Check if clients have been initialized.
+     * 
+     * @return true if both kgClient and tsClient are set.
+     */
+    public boolean areClientsInitialized() {
+        return this.kgClient != null && this.tsClient != null;
     }
 
     /**
