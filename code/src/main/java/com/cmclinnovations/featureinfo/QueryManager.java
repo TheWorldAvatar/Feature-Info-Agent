@@ -53,26 +53,12 @@ public class QueryManager {
     /**
      * Initialise a new QueryManager instance with internal ConfigStore.
      */
-    public QueryManager() {
+    public QueryManager(RemoteStoreClient kgClient,
+            TimeSeriesClient<Instant> tsClient) throws Exception {
+        this.kgClient = kgClient;
+        this.tsClient = tsClient;
         this.configStore = new ConfigStore();
-    }
-
-    /**
-     * Initialise a new QueryManager instance with provided ConfigStore (for testing).
-     * 
-     * @param configStore Store of class mappings and stack endpoints.
-     */
-    public QueryManager(ConfigStore configStore) {
-        this.configStore = configStore;
-    }
-
-    /**
-     * Load configuration details.
-     * 
-     * @throws Exception if configuration loading fails.
-     */
-    public void loadConfiguration() throws Exception {
-        this.configStore.loadDetails();
+        this.configStore.loadDetails(kgClient);
     }
 
     /**
@@ -85,25 +71,13 @@ public class QueryManager {
     }
 
     /**
-     * Check if clients have been initialized.
+     * Reloads the configuration details from file.
      * 
-     * @return true if both kgClient and tsClient are set.
+     * @throws Exception if reloading fails.
      */
-    public boolean areClientsInitialized() {
-        return this.kgClient != null && this.tsClient != null;
-    }
 
-    /**
-     * Set the client instances used to connect to the KG and RDB.
-     * 
-     * @param kgClient Connection to the KG(s).
-     */
-    public void setClients(
-            RemoteStoreClient kgClient,
-            TimeSeriesClient<Instant> tsClient) {
-
-        this.kgClient = kgClient;
-        this.tsClient = tsClient;
+    public void reloadConfig() throws Exception {
+        this.configStore.loadDetails(kgClient);
     }
 
     /**

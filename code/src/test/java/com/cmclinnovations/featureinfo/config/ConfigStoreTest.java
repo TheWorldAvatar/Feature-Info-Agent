@@ -76,7 +76,7 @@ public class ConfigStoreTest {
 
         // Create store instance (skipping stack integration)
         ConfigStore store = new ConfigStore(configFile.toString());
-        store.loadDetails(false);
+        store.loadDetails(null);
 
         // Check for expected number of entries
         Assertions.assertEquals(
@@ -112,7 +112,7 @@ public class ConfigStoreTest {
 
         // Create store instance (skipping stack integration)
         ConfigStore store = new ConfigStore(configFile.toString());
-        store.loadDetails(false);
+        store.loadDetails(null);
 
         // Check for expected number of entries
         Assertions.assertEquals(
@@ -153,7 +153,7 @@ public class ConfigStoreTest {
         
         // Create store instance (skipping stack integration)
         ConfigStore store = new ConfigStore(configFile.toString());
-        store.loadDetails(false);
+        store.loadDetails(null);
 
         // Add new ConfigEntry instances
         ConfigEntryBuilder builder = new ConfigEntryBuilder(configFile.getParent());
@@ -172,7 +172,7 @@ public class ConfigStoreTest {
         );
 
         // Reload configuration
-        store.loadDetails(false);
+        store.loadDetails(null);
 
         // Assert back to original number of entries
         Assertions.assertEquals(

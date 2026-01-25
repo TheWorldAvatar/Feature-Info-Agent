@@ -9,6 +9,8 @@ import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import uk.ac.cam.cares.jps.base.query.RemoteStoreClient;
+
 /**
  * This class handles storing configuration details and details on
  * endpoints available within the TWA stack.
@@ -142,28 +144,24 @@ public final class ConfigStore {
      * Loads the configuration file details and scans for available
      * TWA Stack endpoints.
      */
-    public void loadDetails() throws Exception {
-        this.loadDetails(true);
-    }
-
-    /**
-     * Loads the configuration file details and scans for available
-     * TWA Stack endpoints.
-     * 
-     * @param inStack flag to load stack endpoints or skip
-     */
-    public void loadDetails(boolean inStack) throws Exception {
-        // Get configuration entries
+    public void loadDetails(RemoteStoreClient kgClient) throws Exception {
+            // Get configuration entries
         this.configEntries.clear();
         ConfigReader reader = new ConfigReader(this.configEntries);
         reader.parseConfig(this.configurationFile);
         LOGGER.info("Have parsed a total of {} configuration entries.", this.configEntries.size());
 
         // Get stack endpoints
-        if(inStack) {
-            this.stackEndpoints.clear();
-            this.stackInteractor = new StackInteractor(this.stackEndpoints);
-            // Note: discoverEndpoints() will be called later after kgClient is initialized
+    
+        this.stackEndpoints.clear();
+        this.stackInteractor = new StackInteractor(this.stackEndpoints);
+        this.stackInteractor.setKgClient(kgClient);
+        try {
+            this.stackInteractor.discoverEndpoints();
+            LOGGER.info("Have discovered a total of {} stack endpoints.",
+                    this.stackInteractor.getEndpoints().size());
+        } catch (Exception exception) {
+            LOGGER.error("Could not discover stack endpoints!", exception);
         }
     }
 

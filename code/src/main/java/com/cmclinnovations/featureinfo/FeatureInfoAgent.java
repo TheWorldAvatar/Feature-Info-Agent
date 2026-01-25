@@ -20,7 +20,6 @@ import org.json.JSONObject;
 import org.springframework.stereotype.Controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import com.cmclinnovations.featureinfo.config.ConfigStore;
 import com.cmclinnovations.featureinfo.objects.Request;
 import com.cmclinnovations.featureinfo.utils.TimeSeriesCreator;
 
@@ -30,14 +29,17 @@ import uk.ac.cam.cares.jps.base.query.RemoteStoreClient;
 import uk.ac.cam.cares.jps.base.timeseries.TimeSeriesClient;
 
 /**
- * This agent expects a HTTP request containing a JSON string with the "iri" and for an individual
- * feature. This information is then used (in conjunction with file-based SPARQL queries) to gather KG
- * data and (if available) timeseries data on that feature and return it as a JSON object.
+ * This agent expects a HTTP request containing a JSON string with the "iri" and
+ * for an individual
+ * feature. This information is then used (in conjunction with file-based SPARQL
+ * queries) to gather KG
+ * data and (if available) timeseries data on that feature and return it as a
+ * JSON object.
  *
  * @author Michael Hillman {@literal <mdhillman@cmclinnovations.com>}
  */
 @Controller
-@WebServlet(urlPatterns = {"/get", "/status", "/refresh", "/make-time-series"})
+@WebServlet(urlPatterns = { "/get", "/status", "/refresh", "/make-time-series" })
 public class FeatureInfoAgent extends JPSAgent {
 
     /**
@@ -49,7 +51,7 @@ public class FeatureInfoAgent extends JPSAgent {
      * Logger for reporting info/errors.
      */
     private static final Logger LOGGER = LogManager.getLogger(FeatureInfoAgent.class);
-    
+
     /**
      * Manager class to run information gathering logic.
      */
@@ -64,7 +66,7 @@ public class FeatureInfoAgent extends JPSAgent {
      * Object mapper used for Jackson serialisation and deserialiation.
      */
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    
+
     /**
      * Perform required setup.
      *
@@ -74,11 +76,9 @@ public class FeatureInfoAgent extends JPSAgent {
     public synchronized void init() throws ServletException {
         try {
             super.init();
-            // Initialize QueryManager first (which contains ConfigStore)
-            this.queryManager = new QueryManager();
-            this.queryManager.loadConfiguration();
+            this.initialiseQueryManager();
             FeatureInfoAgent.CONTEXT = this.getServletContext();
-        } catch(Exception exception) {
+        } catch (Exception exception) {
             this.valid = false;
             LOGGER.error("Could not initialise a valid FeatureInfoAgent instance!", exception);
         }
@@ -90,44 +90,32 @@ public class FeatureInfoAgent extends JPSAgent {
      * @return QueryManager instance.
      */
     public QueryManager getQueryManager() {
-        if(this.queryManager == null) {
-            // Initialize QueryManager if not already done
-            try {
-                this.queryManager = new QueryManager();
-                this.queryManager.loadConfiguration();
-            } catch(Exception exception) {
-                this.valid = false;
-                LOGGER.error("Could not initialise QueryManager!", exception);
-                return null;
-            }
-        }
-        
-        // Ensure clients are initialized
-        if(!this.queryManager.areClientsInitialized()) {
-            RemoteStoreClient kgClient = new RemoteStoreClient();
-            TimeSeriesClient<Instant> tsClient = new TimeSeriesClient<>(kgClient, Instant.class);
-            this.queryManager.setClients(kgClient, tsClient);
-
-            // Initialize StackInteractor with kgClient and discover endpoints
-            if(this.queryManager.getConfigStore().getStackInteractor() != null) {
-                this.queryManager.getConfigStore().getStackInteractor().setKgClient(kgClient);
-                try {
-                    this.queryManager.getConfigStore().getStackInteractor().discoverEndpoints();
-                    LOGGER.info("Have discovered a total of {} stack endpoints.", 
-                            this.queryManager.getConfigStore().getStackInteractor().getEndpoints().size());
-                } catch(Exception exception) {
-                    LOGGER.error("Could not discover stack endpoints!", exception);
-                }
-            }
+        if (this.queryManager == null) {
+            // Initialise QueryManager if not already done
+            this.initialiseQueryManager();
         }
         return this.queryManager;
+    }
+
+    /**
+     * Initialise the QueryManager instance.
+     */
+    private void initialiseQueryManager() {
+        try {
+            RemoteStoreClient kgClient = new RemoteStoreClient();
+            TimeSeriesClient<Instant> tsClient = new TimeSeriesClient<>(kgClient, Instant.class);
+            this.queryManager = new QueryManager(kgClient, tsClient);
+        } catch (Exception exception) {
+            this.valid = false;
+            LOGGER.error("Could not initialise QueryManager!", exception);
+        }
     }
 
     /**
      * Processes HTTP requests with originating details.
      *
      * @param requestParams Request parameters as a JSONObject.
-     * @param request HTTP Servlet Request.
+     * @param request       HTTP Servlet Request.
      * 
      * @return response in JSON format.
      */
@@ -139,67 +127,68 @@ public class FeatureInfoAgent extends JPSAgent {
         String datetime = dateFormat.format(new Date());
         LOGGER.info("Request received at: {}", datetime);
 
-        if(this.check(response)) {
+        if (this.check(response)) {
             // Parse request as JSON
             JSONObject requestParams = AgentCaller.readJsonParameter(request);
 
             // Get the requested route
             String url = request.getRequestURI();
             url = url.substring(url.lastIndexOf("/"), url.length());
-            if (url.contains("?")) url = url.split(Pattern.quote("?"))[0];
+            if (url.contains("?"))
+                url = url.split(Pattern.quote("?"))[0];
 
             // Run logic based on request path
             switch (url) {
                 case "/get":
                 case "get": {
                     // Run main GET logic
-                     // Re-scan endpoints and reload configuration
                     try {
                         getRoute(requestParams, response);
-                    } catch(Exception exception) {
+                    } catch (Exception exception) {
                         LOGGER.error("Could not run /get route.", exception);
                         response.setStatus(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
                         response.getWriter().write("{\"description\":\"Could run /get route successfully!\"}");
                     }
                 }
-                break;
+                    break;
 
                 case "/refresh":
-                case "refresh" : {
+                case "refresh": {
                     // Re-scan endpoints and reload configuration
                     try {
                         refreshRoute(requestParams, response);
-                    } catch(Exception exception) {
+                    } catch (Exception exception) {
                         LOGGER.error("Could not run /refresh route.", exception);
                         response.setStatus(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
                         response.getWriter().write("{\"description\":\"Could not clear cached data structures!\"}");
                     }
                 }
-                break;
+                    break;
 
                 case "/status":
                 case "status": {
                     // Return status
                     statusRoute(response);
                 }
-                break;
+                    break;
 
                 case "/make-time-series": {
                     // Undocumented route to generate sample time series data.
                     // Not to be used outside of very specific testing cases.
                     makeTimeSeries(response);
                 }
-                break;
+                    break;
 
                 default: {
                     // Something else
                     LOGGER.info("Detected an unknown request route...");
                     response.setStatus(Response.Status.NOT_IMPLEMENTED.getStatusCode());
-                    response.getWriter().write("{\"description\":\"Unknown route, only '/get', '/refresh', and '/status' are permitted.\"}");
+                    response.getWriter().write(
+                            "{\"description\":\"Unknown route, only '/get', '/refresh', and '/status' are permitted.\"}");
                 }
-                break;
+                    break;
             }
-        } 
+        }
 
         response.setContentType("text/json");
         response.getWriter().flush();
@@ -210,30 +199,31 @@ public class FeatureInfoAgent extends JPSAgent {
      * Initiate logic required to process a request on the "/get" route.
      * 
      * @param requestParams HTTP request parameters
-     * @param response HTTp response
+     * @param response      HTTp response
      * 
      * @throws IOException
      */
     protected void getRoute(JSONObject requestParams, HttpServletResponse response) throws IOException {
         LOGGER.info("Detected request to get meta and times series data.");
 
-        if(!this.valid) {
+        if (!this.valid) {
             response.setStatus(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
             response.getWriter().write("{\"description\":\"Agent is in invalid state, please check server logs.\"}");
             return;
-        } 
+        }
 
         // Check for a valid request
-        if(!this.getQueryManager().checkRequest(requestParams)) {
+        if (!this.getQueryManager().checkRequest(requestParams)) {
             response.setStatus(Response.Status.BAD_REQUEST.getStatusCode());
-            response.getWriter().write("{\"description\":\"Request is missing required parameters, please check documentation.\"}");
+            response.getWriter()
+                    .write("{\"description\":\"Request is missing required parameters, please check documentation.\"}");
             return;
         }
 
         // Run information gathering logic
-        Request request = OBJECT_MAPPER.readValue(requestParams.toString(),Request.class);
+        Request request = OBJECT_MAPPER.readValue(requestParams.toString(), Request.class);
         JSONObject result = this.getQueryManager().processRequest(request, response);
-        if(result != null) {
+        if (result != null) {
             response.setStatus(Response.Status.OK.getStatusCode());
             response.getWriter().write(result.toString(2));
         }
@@ -249,7 +239,7 @@ public class FeatureInfoAgent extends JPSAgent {
     protected void statusRoute(HttpServletResponse response) throws IOException {
         LOGGER.info("Detected request to get agent status...");
 
-        if(this.valid) {
+        if (this.valid) {
             response.setStatus(Response.Status.OK.getStatusCode());
             response.getWriter().write("{\"description\":\"Ready to serve.\"}");
         } else {
@@ -263,31 +253,31 @@ public class FeatureInfoAgent extends JPSAgent {
      * endpoints and reloading the agent's configuration file.
      * 
      * @param requestParams JSONObject of request parameters.
-     * @param response HTTP response.
+     * @param response      HTTP response.
      * 
      * @throws Exception if refresh does not succeed.
      */
     protected void refreshRoute(JSONObject requestParams, HttpServletResponse response) throws Exception {
         LOGGER.info("Detected request to refresh cached information...");
 
-        if(!this.valid) {
+        if (!this.valid) {
             response.setStatus(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
             response.getWriter().write("{\"description\":\"Agent is in invalid state, please check server logs.\"}");
             return;
-        } 
+        }
 
         // Force refresh of configuration
-        this.getQueryManager().getConfigStore().loadDetails();
+        this.getQueryManager().reloadConfig();
 
         // Respond
         response.setStatus(Response.Status.OK.getStatusCode());
         response.getWriter().write(String.format("""
-            {
-                "description": "Cached endpoints and configurations have been refreshed.",
-                "completed-at": "%s"
+                {
+                    "description": "Cached endpoints and configurations have been refreshed.",
+                    "completed-at": "%s"
 
-            }
-            """, LocalTime.now().toString()));
+                }
+                """, LocalTime.now().toString()));
     }
 
     /**
@@ -296,7 +286,7 @@ public class FeatureInfoAgent extends JPSAgent {
      * @param response HTTP response.
      */
     private final boolean check(HttpServletResponse response) throws IOException {
-        if(!valid)  {
+        if (!valid) {
             response.setStatus(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
             response.getWriter().write("{\"description\":\"Could not initialise a valid FeatureInfoAgent instance!\"}");
             return false;
@@ -312,11 +302,11 @@ public class FeatureInfoAgent extends JPSAgent {
     private final void makeTimeSeries(HttpServletResponse response) throws IOException {
         LOGGER.info("Detected request to generate sample time series data...");
 
-        if(!this.valid) {
+        if (!this.valid) {
             response.setStatus(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
             response.getWriter().write("{\"description\":\"Agent is in invalid state, please check server logs.\"}");
             return;
-        } 
+        }
 
         // Make time series data
         TimeSeriesCreator creator = new TimeSeriesCreator(this.getQueryManager().getConfigStore());
@@ -324,13 +314,16 @@ public class FeatureInfoAgent extends JPSAgent {
         creator.addSampleData();
 
         response.setStatus(Response.Status.OK.getStatusCode());
-        response.getWriter().write(String.format("""
-            {
-                "description": "Have attempted to generate new time series in 'sample-data' namespace and 'castles' database.",
-                "completed-at": "%s"
+        response.getWriter()
+                .write(String.format(
+                        """
+                                {
+                                    "description": "Have attempted to generate new time series in 'sample-data' namespace and 'castles' database.",
+                                    "completed-at": "%s"
 
-            }
-            """, LocalTime.now().toString()));
+                                }
+                                """,
+                        LocalTime.now().toString()));
         LOGGER.info("Generation complete at: {}", LocalTime.now().toString());
     }
 

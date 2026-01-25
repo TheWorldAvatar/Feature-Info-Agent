@@ -73,7 +73,7 @@ public class ClassHandlerTest {
 
         // Create store instance (skipping stack integration)
         ConfigStore configStore = new ConfigStore(configFile.toString());
-        configStore.loadDetails(false);
+        configStore.loadDetails(null);
 
         // Setup mocking for stack endpoints
         ConfigStore spiedConfig = Mockito.spy(configStore);
