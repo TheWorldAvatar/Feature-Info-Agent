@@ -1,5 +1,6 @@
 package com.cmclinnovations.featureinfo.core;
 
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -12,6 +13,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
+import org.json.JSONArray;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -103,20 +105,17 @@ public class ClassHandlerTest {
         // Mock a RemoteStoreClient instance
         RemoteStoreClient kgClient = mock(RemoteStoreClient.class);
 
-        // Respond to the non-ONTOP query with nothing
-        when(
-            kgClient.executeQuery(
-                ArgumentMatchers.anyString()
-            )
-        ).thenReturn(
-            new org.json.JSONArray("""
+        JSONArray mockResponse = new JSONArray("""
                 [
                     { "class": "https://theworldavatar.io/mock-domain/ClassOne" },
                     { "class": "https://theworldavatar.io/mock-domain/ClassTwo" },
                     { "class": "https://theworldavatar.io/mock-domain/ClassThree" }
                 ]
-            """)
-        );
+            """);
+
+        // Respond to the non-ONTOP query with nothing
+        when(kgClient.executeQuery(ArgumentMatchers.anyString())).thenReturn(mockResponse);
+        when(kgClient.executeFederatedQuery(nullable(List.class), ArgumentMatchers.anyString())).thenReturn(mockResponse);
 
         // Create a ClassHandler instance
         ClassHandler handler = new ClassHandler(spiedConfig, kgClient);

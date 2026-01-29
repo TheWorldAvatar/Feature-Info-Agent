@@ -118,9 +118,9 @@ public class ClassHandler {
                 configStore.getStackEndpoints(StackEndpointType.ONTOP),
                 Utils.getBlazegraphEndpoints(configStore, request.getEndpoint()));
 
-         // Run query
-         List<String> endpoints = Utils.getBlazegraphURLs(configStore, request.getEndpoint());
-         JSONArray jsonResult = null;
+        // Run query
+        List<String> endpoints = Utils.getBlazegraphURLs(configStore, request.getEndpoint());
+        JSONArray jsonResult = null;
 
         try {
             if (endpoints.size() == 1) {
@@ -176,6 +176,10 @@ public class ClassHandler {
      */
     private List<String> parseJSON(JSONArray rawResult) {
         List<String> classIRIs = new ArrayList<>();
+
+        if (rawResult == null) {
+            return classIRIs;
+        }
 
         for (int i = 0; i < rawResult.length(); i++) {
             JSONObject entry = rawResult.getJSONObject(i);
