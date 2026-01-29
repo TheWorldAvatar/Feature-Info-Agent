@@ -121,11 +121,6 @@ public class ClassHandler {
          // Run query
          List<String> endpoints = Utils.getBlazegraphURLs(configStore, request.getEndpoint());
          JSONArray jsonResult = null;
- 
-         LOGGER.debug("Running class determination query.");
-         kgClient.setQueryEndpoint(endpoints.stream().filter(s -> s.contains("/kb/")).findFirst()
-            .orElseThrow(()->new RuntimeException("No 'kb' namespace present")));
-         jsonResult = kgClient.executeQuery(queryString);
 
         try {
             if (endpoints.size() == 1) {
