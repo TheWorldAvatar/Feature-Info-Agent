@@ -177,6 +177,10 @@ public class ClassHandler {
     private List<String> parseJSON(JSONArray rawResult) {
         List<String> classIRIs = new ArrayList<>();
 
+        if (rawResult == null) {
+            return classIRIs;
+        }
+
         for (int i = 0; i < rawResult.length(); i++) {
             JSONObject entry = rawResult.getJSONObject(i);
 

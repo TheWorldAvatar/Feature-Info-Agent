@@ -1,5 +1,11 @@
 [//]: # (Note that version headers need to start with "# " characters to be picked up by some automated scripts)
 
+# 3.4.0
+
+### Features
+
+* Query all ontop endpoints for class determination.
+
 # 3.3.1
 
 ### Bug Fixes
