@@ -76,8 +76,8 @@ public class FeatureInfoAgent extends JPSAgent {
     public synchronized void init() throws ServletException {
         try {
             super.init();
-            this.initialiseQueryManager();
             FeatureInfoAgent.CONTEXT = this.getServletContext();
+            this.initialiseQueryManager();
         } catch (Exception exception) {
             this.valid = false;
             LOGGER.error("Could not initialise a valid FeatureInfoAgent instance!", exception);
