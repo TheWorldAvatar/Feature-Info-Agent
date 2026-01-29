@@ -91,10 +91,10 @@ jobs:
           push: true
           context: ./Agents/FeatureInfoAgent
           tags: |
-            ghcr.io/cambridge-cares/feature-info-agent:latest
-            ghcr.io/cambridge-cares/feature-info-agent:${{ env.versionFull }}
-            ghcr.io/cambridge-cares/feature-info-agent:${{ env.versionMajor }}
-            ghcr.io/cambridge-cares/feature-info-agent:${{ env.versionMinor }}
+            ghcr.io/theworldavatar/feature-info-agent:latest
+            ghcr.io/theworldavatar/feature-info-agent:${{ env.versionFull }}
+            ghcr.io/theworldavatar/feature-info-agent:${{ env.versionMajor }}
+            ghcr.io/theworldavatar/feature-info-agent:${{ env.versionMinor }}
             
             
       # Generate the release body text
