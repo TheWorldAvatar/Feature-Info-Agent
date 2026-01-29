@@ -15,7 +15,7 @@
         <maven.compiler.release>17</maven.compiler.release>
 
         <!-- Version of the JPS Base Library to use -->
-        <jps.base.version>1.44.2</jps.base.version>
+        <jps.base.version>1.49.0</jps.base.version>
     </properties>
 
     <!-- Repository locations to deploy to -->
@@ -23,7 +23,7 @@
         <repository>
             <id>repo</id>
             <name>TheWorldAvatar Maven Repository</name>
-            <url>https://maven.pkg.github.com/cambridge-cares/TheWorldAvatar/</url>
+            <url>https://maven.pkg.github.com/TheWorldAvatar/Feature-Info-Agent/</url>
         </repository>
     </distributionManagement>
 
@@ -31,7 +31,7 @@
     <parent>
         <groupId>uk.ac.cam.cares.jps</groupId>
         <artifactId>jps-parent-pom</artifactId>
-        <version>2.3.1</version>
+        <version>2.4.0</version>
     </parent>
 
     <!-- Profiles are used to switch between building for development and production 
@@ -180,7 +180,7 @@
         <dependency>
             <groupId>com.cmclinnovations</groupId>
             <artifactId>stack-clients</artifactId>
-            <version>1.40.1</version>
+            <version>1.56.3</version>
         </dependency>
 
         <!-- Java servlet API, version pulled from parent -->
