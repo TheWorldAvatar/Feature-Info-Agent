@@ -1,3 +1,5 @@
+# Mermaid `GET` request
+
 ```mermaid
 graph TD
    A[Incoming '/get' request] --> B{Is request valid?};
