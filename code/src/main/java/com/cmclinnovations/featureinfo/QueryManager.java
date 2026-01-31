@@ -138,7 +138,18 @@ public class QueryManager {
             result.put("time", timedata);
         }
         if (trajectoryData != null && !trajectoryData.isEmpty()) {
-            result.put("meta", trajectoryData);
+            if (result.has("meta")) {
+                // append to existing metadata object
+                trajectoryData.keySet().forEach(k -> {
+                    if (metadata.has(k)) {
+                        LOGGER.warn("Trajectory data and metadata has the same label: {}", k);
+                    } else {
+                        metadata.put(k, trajectoryData.get(k));
+                    }
+                });
+            } else {
+                result.put("meta", trajectoryData);
+            }
         }
 
         return result;
@@ -149,7 +160,7 @@ public class QueryManager {
      * and which
      * configuration entries match said classes.
      * 
-     * @param iri      feature IRI.
+     * @param iri feature IRI.
      * 
      * @return Set of matching configuration entries.
      * 

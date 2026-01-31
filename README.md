@@ -122,18 +122,21 @@ The `time` object should contain the following parameters:
     - "first" (furthest back time value in RDB)
   Defaults to "now".
 
-The `trajectory` object should contain the following parameters, more descriptions of the file contents are given in [here](#trajectory-queries):
+For clarification, the `limit` value supports both positive and negative integers. For reference types of `now` and `latest` it is multiplied by **-1** then **added** to the reference time during the calculation of retrieval times. For references of `first` is is simply **added** to the reference time.
+
+For example, a value of `24` with a reference of `now` will provide all values generated within the last real-world day. Whereas a value of `24` with a reference of `first` will return all values generated between the first data point and one real-world day afterwards.
+
+The `trajectory` should be an array of JSON objects, where each of these objects should contain the following parameters:
 
 - Required:
   - `pointIriQuery`: Location of file with SPARQL query used to get point IRIs containing time series (relative to configuration file).
   - `featureIriQuery`: Location of file with SQL/SPARQL query to obtain the intersected feature IRIs (relative to configuration file).
   - `metaQuery`: Location of file with SPARQL query to obtain metadata of the intersected features (relative to configuration file).
+  - `database`: Database containing time series data of the points.
 
-For clarification, the `limit` value supports both positive and negative integers. For reference types of `now` and `latest` it is multiplied by **-1** then **added** to the reference time during the calculation of retrieval times. For references of `first` is is simply **added** to the reference time.
+More descriptions of the file contents are given in [here](#trajectory-queries).
 
-For example, a value of `24` with a reference of `now` will provide all values generated within the last real-world day. Whereas a value of `24` with a reference of `first` will return all values generated between the first data point and one real-world day afterwards.
-
-Within the [samples/fia/fia-config.json](./samples/fia/fia-config.json) file, a mock configuration can be found.
+Within the [sample/fia/fia-config.json](./sample/fia/fia-config.json) file, a mock configuration can be found.
 
 ### Expected query formats
 
