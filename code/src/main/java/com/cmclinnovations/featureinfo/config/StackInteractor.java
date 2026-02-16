@@ -95,7 +95,7 @@ public class StackInteractor extends ContainerClient {
     private List<StackEndpoint> discoverOntop() {
         List<StackEndpoint> ontopEndpoints = new ArrayList<>();
 
-        ontopEndpoints.addAll(discoverOntopDefault());
+        ontopEndpoints.addAll(discoverOntopDefault()); // Other parts of the code rely on the default ontop endpoint being the first
 
         // If kb blazegraph endpoint is available and kgClient is set, query it for
         // Ontop endpoints

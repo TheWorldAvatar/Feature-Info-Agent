@@ -113,30 +113,38 @@ public class QueryManager {
      * @throws IOException if response cannot be written to.
      */
     public JSONObject processRequest(Request request, HttpServletResponse response) throws IOException {
-
         LOGGER.info("Incoming IRI is: {}", request.getIri());
         request.getEndpoint().ifPresentOrElse(
                 endpoint -> LOGGER.info("Incoming enforced endpoint is: {}", endpoint),
                 () -> LOGGER.info("No incoming enforced endpoint, will attempt federation."));
 
-        // Determine class matches
+        // 1. Determine class matches
+        long startDetermine = System.currentTimeMillis();
         List<ConfigEntry> classMatches = null;
         try {
             classMatches = this.determineClasses(request, response);
         } catch (IOException exception) {
             return null;
         }
+        long durationDetermine = System.currentTimeMillis() - startDetermine;
 
-        // Get meta data
+        // 2. Get meta data
+        long startMeta = System.currentTimeMillis();
         JSONObject metadata = getMeta(request, classMatches);
+        long durationMeta = System.currentTimeMillis() - startMeta;
 
-        // Get time data
+        // 3. Get time data
+        long startTime = System.currentTimeMillis();
         JSONArray timedata = getTime(request, classMatches);
+        long durationTime = System.currentTimeMillis() - startTime;
 
-        // Get trajectory data
+        // 4. Get trajectory data
+        long startTrajectory = System.currentTimeMillis();
         JSONObject trajectoryData = getTrajectory(request, classMatches);
+        long durationTrajectory = System.currentTimeMillis() - startTrajectory;
 
-        // Combine into a single JSON structure
+        // 5. Combine into a single JSON structure
+        long startCombine = System.currentTimeMillis();
         JSONObject result = new JSONObject();
 
         if (metadata != null && !metadata.isEmpty()) {
@@ -146,8 +154,15 @@ public class QueryManager {
             result.put("time", timedata);
         }
         if (trajectoryData != null && !trajectoryData.isEmpty()) {
-            result.put("meta", trajectoryData);
+            // Fixed: changed key from "meta" to "trajectory" to avoid overwriting metadata
+            result.put("trajectory", trajectoryData);
         }
+        long durationCombine = System.currentTimeMillis() - startCombine;
+
+        // Log all timings just before return
+        LOGGER.info(
+                "Performance Metrics - DetermineClass: {}ms, GetMeta: {}ms, GetTime: {}ms, GetTrajectory: {}ms, Combine: {}ms",
+                durationDetermine, durationMeta, durationTime, durationTrajectory, durationCombine);
 
         return result;
     }
@@ -157,7 +172,7 @@ public class QueryManager {
      * and which
      * configuration entries match said classes.
      * 
-     * @param iri      feature IRI.
+     * @param iri feature IRI.
      * 
      * @return Set of matching configuration entries.
      * 
