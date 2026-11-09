@@ -6,17 +6,14 @@ PREFIX dcat: <http://www.w3.org/ns/dcat#>
 SELECT DISTINCT ?class
 WHERE {
     {
-        SELECT DISTINCT ?all_endpoints
-        WHERE {
-            {
-                VALUES ?all_endpoints { [ENDPOINTS-ALL] }
-            }
-            UNION
-            {
-                VALUES ?serviceType { ser:Ontop }
-                ?service a ?serviceType ;
-                   dcat:endpointURL ?all_endpoints .
-            }
+        {
+            VALUES ?all_endpoints { [ENDPOINTS-ALL] }
+        }
+        UNION
+        {
+            VALUES ?serviceType { ser:Ontop }
+            ?service a ?serviceType ;
+               dcat:endpointURL ?all_endpoints .
         }
     }
     VALUES ?kg_endpoints { [ENDPOINTS-BLAZEGRAPH] }
